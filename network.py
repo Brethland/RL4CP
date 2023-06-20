@@ -80,5 +80,5 @@ def standard_training(model, optimizer, train_loader,
                 pbar.set_postfix(loss=loss.item(), acc=acc.item())
 
 
-
-standard_net = Agent(DenseNet([2*MYN, FIRST_LAYER_NEURONS, SECOND_LAYER_NEURONS, THIRD_LAYER_NEURONS, 1]), torch.optim.Adam(model.parameters(), lr=LEARNING_RATE), standard_training)
+model = DenseNet([2*MYN, FIRST_LAYER_NEURONS, SECOND_LAYER_NEURONS, THIRD_LAYER_NEURONS, 1])
+standard_net = Agent(model, torch.optim.Adam(model.parameters(), lr=LEARNING_RATE), standard_training)
