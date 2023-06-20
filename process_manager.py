@@ -1,7 +1,10 @@
 import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+import torch 
 
 from constants import *
-
+from tools import *
 
 alwaysfalse = lambda x: 0
 
@@ -23,40 +26,59 @@ def display_graph(adjMatG):
     plt.show()
 
 
-
 def feedback(elite, score):
     print(f"Best score: {score}")
-    display_graph(elite)
+    display_graph(actions_to_adj(elite))
 
 
-
-def run(agent, score_func, terminal_condition=alwaysfalse, maxreps=1000000):
+def run(agent, score_func, terminal_condition=alwaysfalse, maxreps=100000):
+    old_elites = np.array([]) # These are the Superstates.
     for i in range(maxreps):
             
         # generate data
         data = agent.generate(n_sessions)
+        data = np.concatenate((data, old_elites)) if old_elites.size else data
 
         # select training data
         data_scores = [score_func(point) for point in data]
         num_elites = round(len(data_scores)*(1.0-percentile/100))
-        elites = [data for _, data in sorted(zip(data_scores, data)][:-num_elites] # first sort based on data_scores, then take last num_elites elements
+        
+        elites = np.array([data for _, data in sorted(zip(data_scores, data),key=lambda x: x[0])][-num_elites:]) # first sort based on data_scores, then take last num_elites elements
 
         if terminal_condition(max(data_scores)):
             print(f"Convergence reached! Score: {max(data_scores)}")
-            feedback()
+            feedback(elites[-1],max(data_scores))
             exit()
 
         # train data
+        train_data = np.zeros((elites.shape[0]*(elites.shape[1]-1), elites.shape[1]*2+1))
 
-        #!!!
-        train_data = torch.from_numpy(np.column_stack((elite_states, elite_actions)))
-        train_data = train_data.to(torch.float)
-        train_loader = torch.utils.data.DataLoader(train_data, shuffle=True, batch_size=32)
+        def row(i): 
+            a = np.zeros(MYN)
+            a[i]+=1
+            return a
+
+        for i,elite in enumerate(elites):
+            for j in range(MYN-1):
+                train_data[i+j] = np.concatenate((elite[:j], np.zeros(MYN-j), row(j), np.array([elite[j+1]])))
+            
+        train_data = torch.from_numpy(train_data).to(torch.float)
         
-        agent.train(elites )# !!!!
+
+        train_loader = torch.utils.data.DataLoader(train_data, shuffle=True, batch_size=32)
+        agent.train(train_loader)
 
         # user feedback
         feedback(elites[-1],max(data_scores))
+
+        # super states
+        num_old_elites = round(len(data_scores)*(1.0-super_percentile/100.0))
+        if num_old_elites:
+            old_elites = elites[-num_old_elites:]
+            print(num_old_elites, num_elites)
+            print(len(old_elites), len(elites))
+        else: old_elites = np.array([]) 
+        
 
     print(f"Convergence not reached with parameters N={N}, Learningrate={LEARNING_RATE}.")
     return 0

@@ -1,5 +1,7 @@
 import torch
 from torch import nn
+import numpy as np
+import itertools
 
 from constants import *
 
@@ -17,7 +19,7 @@ class Agent:
                 step[i] += 1
                 # The net takes a vector of length MYN*2 of the form [actions, step] with step being
                 # of the form [0,...,1,...,0] with a 1 on the current index to be generated.
-                prob = self.net(torch.from_numpy(np.concatenate([actions,step]).to(torch.float)))
+                prob = self.net(torch.from_numpy(np.array([np.concatenate([actions,step])])).to(torch.float))
                 prob = prob.detach().cpu().numpy()
                 actions[i] = (np.random.rand() > prob) # Sample directly
                 return generate_next_step(actions, i=i+1)
@@ -61,7 +63,6 @@ def standard_training(model, optimizer, train_loader,
     Updates the model parameters (in place) using the given optimizer object.
     Returns `None`.
     '''
-
     criterion = nn.BCELoss()
     pbar = trange(num_epochs) if print_logs else range(num_epochs)
 
