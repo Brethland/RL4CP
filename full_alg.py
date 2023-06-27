@@ -243,8 +243,8 @@ def run(agent, score_func, terminal_condition=alwaysfalse, maxreps=100000):
         if num_old_elites:
             old_elites = elites[-num_old_elites:]
         else: old_elites = np.array([]) 
-        print(agent.generate.calls, agent.generate.time/agent.generate.calls)    
-        exit()
+        # print(agent.generate.calls, agent.generate.time/agent.generate.calls)    
+        # exit()
     
     print(f"Convergence not reached with parameters N={N}, Learningrate={LEARNING_RATE}.")
     return 0

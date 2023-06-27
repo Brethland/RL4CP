@@ -1,7 +1,19 @@
 import numpy as np
 import networkx as nx
+from time import time
 
 from constants import *
+
+def speedncount(func):
+    def wrap_func(*args, **kwargs):
+        wrap_func.calls += 1
+        t1 = time()
+        result = func(*args, **kwargs)
+        t2 = time()
+        print(f'Func {func.__name__!r} exec in {(t2-t1):.4f}s')
+        return result
+    wrap_func.calls = 0
+    return wrap_func
 
 def actions_to_adj(actions):
     adjMat = np.zeros((N,N),dtype=np.int8)

@@ -4,6 +4,7 @@ import numpy as np
 import itertools
 
 from constants import *
+from tools import speedncount
 
 
 class Agent:
@@ -12,6 +13,8 @@ class Agent:
         self.optimizer = optimizer
         self.training_func = training_func
 
+
+    @speedncount
     def generate(self, num_sessions):
         def generate_next_step(actions, i=0):
             if i < len(actions):
@@ -28,6 +31,8 @@ class Agent:
         # Return a vector full with num_sessions numpy arrays that correspond to graphs.
         return [generate_next_step(np.zeros(MYN)) for j in range(num_sessions)]    
 
+
+    @speedncount
     def train(self, train_loader, **kwargs):
         self.training_func(self.net, self.optimizer, train_loader, **kwargs)
         
@@ -47,6 +52,7 @@ class DenseNet(nn.Module):
                       
         self.net = nn.Sequential(*self.layers)
 
+    
     def forward(self, x):
         prob = self.net(x)
         return prob
@@ -57,6 +63,7 @@ class DenseNet(nn.Module):
 
 
 
+@speedncount
 def standard_training(model, optimizer, train_loader,
                   num_epochs=1, pbar_update_interval=200, print_logs=False):
     '''
