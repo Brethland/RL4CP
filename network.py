@@ -7,6 +7,12 @@ from constants import *
 from tools import speedncount
 
 
+
+###########
+# NETWORK #
+###########
+
+
 class Agent:
     def __init__(self, net, optimizer, training_func):
         self.net = net
@@ -16,51 +22,28 @@ class Agent:
 
     @speedncount
     def generate(self, num_sessions):
-        def generate_next_step(actions, i=0):
-            if i < len(actions):
-                step = np.zeros(len(actions))
-                step[i] += 1
+        @speedncount
+        def generate_next_step(actions, i=0): # Actions has to be a Matrix with the _rows_ being an actions vector
+            if i < actions.shape[1]:
+                step = np.zeros(actions.shape)
+                step[:,i] += 1
                 # The net takes a vector of length MYN*2 of the form [actions, step] with step being
                 # of the form [0,...,1,...,0] with a 1 on the current index to be generated.
-                prob = self.net(torch.from_numpy(np.array([np.concatenate([actions,step])])).to(torch.float))
+                prob = self.net(torch.from_numpy(np.hstack((actions, step))).to(torch.float))
                 prob = prob.detach().cpu().numpy()
-                actions[i] = (np.random.rand() > prob) # Sample directly
+                for j in range(actions.shape[0]):
+                    actions[j,i] = (np.random.rand() > prob[j]) # Sample directly
                 return generate_next_step(actions, i=i+1)
             return actions
         
         # Return a vector full with num_sessions numpy arrays that correspond to graphs.
-        return [generate_next_step(np.zeros(MYN)) for j in range(num_sessions)]    
+        return generate_next_step(np.zeros((num_sessions,MYN)))    
 
 
-    @speedncount
+    # @speedncount
     def train(self, train_loader, **kwargs):
         self.training_func(self.net, self.optimizer, train_loader, **kwargs)
         
-
-
-
-class DenseNet(nn.Module):
-    def __init__(self, widths):
-        super().__init__()
-
-        num_layers = len(widths)
-        layers = [[nn.Linear(widths[i], widths[i+1]), nn.ReLU()] for i in range(num_layers-2)]
-        self.layers = [nn.Flatten(1, -1), 
-                      *list(itertools.chain(*layers)), 
-                      nn.Linear(widths[-2], widths[-1]),
-                      nn.Sigmoid()]
-                      
-        self.net = nn.Sequential(*self.layers)
-
-    
-    def forward(self, x):
-        prob = self.net(x)
-        return prob
-
-
-
-
-
 
 
 @speedncount

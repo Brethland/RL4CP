@@ -8,13 +8,11 @@ from process_manager import run
 from network import standard_net
 
 
+########
+# MAIN #
+########
 
-# def conjecture3(actions):
-#     mat = actions_to_adj(actions)
-#     return (Randic_index(mat) + girth(nx.Graph(mat)) - 3.5)*np.sqrt(N-1)/(n-3+np.sqrt(2))
-    
-
-@speedncount
+# @speedncount
 def conjecture2(actions):
     graph = nx.Graph(actions_to_adj(actions))
     if not nx.is_connected(graph):

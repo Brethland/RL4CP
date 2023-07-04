@@ -13,11 +13,11 @@ from math import ceil
 #############
 
 
-N = 4   #number of vertices in the graph. Only used in the reward function, not directly relevant to the algorithm 
+N = 10   #number of vertices in the graph. Only used in the reward function, not directly relevant to the algorithm 
 MYN = int(N*(N-1)/2)  #The length of the word we are generating. Here we are generating a graph, so we create a 0-1 word of length (N choose 2)
 
 LEARNING_RATE = 0.0003 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
-n_sessions = 300 #number of new sessions per iteration
+n_sessions = 3 #number of new sessions per iteration
 percentile = 93 #top 100-X percentile we are learning from
 super_percentile = 94 #top 100-X percentile that survives to next iteration
 
@@ -93,20 +93,21 @@ class Agent:
     @speedncount
     def generate(self, num_sessions):
         @speedncount
-        def generate_next_step(actions, i=0):
-            if i < len(actions):
-                step = np.zeros(len(actions))
-                step[i] += 1
+        def generate_next_step(actions, i=0): # Actions has to be a Matrix with the _rows_ being an actions vector
+            if i < actions.shape[1]:
+                step = np.zeros(actions.shape)
+                step[:,i] += 1
                 # The net takes a vector of length MYN*2 of the form [actions, step] with step being
                 # of the form [0,...,1,...,0] with a 1 on the current index to be generated.
-                prob = self.net(torch.from_numpy(np.array([np.concatenate([actions,step])])).to(torch.float))
+                prob = self.net(torch.from_numpy(np.hstack((actions, step))).to(torch.float))
                 prob = prob.detach().cpu().numpy()
-                actions[i] = (np.random.rand() > prob) # Sample directly
+                for j in range(actions.shape[0]):
+                    actions[j,i] = (np.random.rand() > prob[j]) # Sample directly
                 return generate_next_step(actions, i=i+1)
             return actions
         
         # Return a vector full with num_sessions numpy arrays that correspond to graphs.
-        return [generate_next_step(np.zeros(MYN)) for j in range(num_sessions)]    
+        return generate_next_step(np.zeros((num_sessions,MYN)))    
 
 
     # @speedncount

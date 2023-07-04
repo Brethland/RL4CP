@@ -4,16 +4,25 @@ from time import time
 
 from constants import *
 
+#########
+# TOOLS #
+#########
+
+
 def speedncount(func):
     def wrap_func(*args, **kwargs):
         wrap_func.calls += 1
         t1 = time()
         result = func(*args, **kwargs)
         t2 = time()
-        print(f'Func {func.__name__!r} exec in {(t2-t1):.4f}s')
+        print(f'Func {func.__name__!r} exec in {(t2-t1):.4f}s, total of {wrap_func.time}s and {wrap_func.calls} calls')
+        wrap_func.time += t2-t1
+
         return result
     wrap_func.calls = 0
+    wrap_func.time = 0
     return wrap_func
+
 
 def actions_to_adj(actions):
     adjMat = np.zeros((N,N),dtype=np.int8)
@@ -33,3 +42,6 @@ def Randic_index(adjMat):
             if adjMat[i,j]==1:
                 R += 1/np.sqrt(sum(adjMat[i])*sum(adjMat[j]))
     return R
+
+
+

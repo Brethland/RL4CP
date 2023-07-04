@@ -7,13 +7,17 @@ import torch
 from constants import *
 from tools import *
 
+
+###################
+# PROCESS MANAGER #
+###################
+
+
 alwaysfalse = lambda x: 0
-
-
 
 plt.ion()
 
-@speedncount
+# @speedncount
 def display_graph(adjMatG):
     print("Best adjacency matrix in current step:")
     print(adjMatG)
@@ -28,13 +32,13 @@ def display_graph(adjMatG):
     plt.pause(0.001)
     plt.show()
 
-@speedncount
+# @speedncount
 def feedback(elite, score):
     print(f"Best score: {score}")
     display_graph(actions_to_adj(elite))
 
 
-@speedncount
+# @speedncount
 def run(agent, score_func, terminal_condition=alwaysfalse, maxreps=100000):
     old_elites = np.array([]) # These are the Superstates.
     for i in range(maxreps):
@@ -79,8 +83,9 @@ def run(agent, score_func, terminal_condition=alwaysfalse, maxreps=100000):
         if num_old_elites:
             old_elites = elites[-num_old_elites:]
         else: old_elites = np.array([]) 
-        
-
+        # print(agent.generate.calls, agent.generate.time/agent.generate.calls)    
+        # exit()
+    
     print(f"Convergence not reached with parameters N={N}, Learningrate={LEARNING_RATE}.")
     return 0
 
